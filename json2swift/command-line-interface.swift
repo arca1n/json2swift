@@ -65,7 +65,7 @@ private func resolveAbsolutePaths(for jsonFileNames: [String], inDirectory direc
 
 
 // MARK: - Generating Swift file based on JSON
-private func generateSwiftFileBasedOnJSON(inFile jsonFilePath: String, includeJSONUtilities: Bool) -> ErrorMessage? {
+private func generateSwiftFileBasedOnJSON(inFile jsonFilePath: String, includeJSONUtilities: Bool, rootName : String? = nil) -> ErrorMessage? {
     let url = URL(fileURLWithPath: jsonFilePath)
     let data: Data
     do    { data = try Data(contentsOf: url) }
@@ -74,10 +74,11 @@ private func generateSwiftFileBasedOnJSON(inFile jsonFilePath: String, includeJS
     let jsonObject: Any
     do    { jsonObject = try JSONSerialization.jsonObject(with: data, options: []) }
     catch { return "File does not contain valid JSON: \(jsonFilePath)" }
-    
+    let filenameWithExtension = (jsonFilePath as NSString).lastPathComponent
+    let filename = (filenameWithExtension as NSString).deletingPathExtension
     let jsonSchema: JSONElementSchema
-    if      let jsonElement = jsonObject as? JSONElement   { jsonSchema = JSONElementSchema.inferred(from: jsonElement, named: "root-type") }
-    else if let jsonArray   = jsonObject as? [JSONElement] { jsonSchema = JSONElementSchema.inferred(from: jsonArray,   named: "root-type") }
+    if      let jsonElement = jsonObject as? JSONElement   { jsonSchema = JSONElementSchema.inferred(from: jsonElement, named: filename) }
+    else if let jsonArray   = jsonObject as? [JSONElement] { jsonSchema = JSONElementSchema.inferred(from: jsonArray,   named: filename) }
     else                                                   { return "Unsupported JSON format: must be a dictionary or array of dictionaries." }
     
     let swiftStruct = SwiftStruct.create(from: jsonSchema)
